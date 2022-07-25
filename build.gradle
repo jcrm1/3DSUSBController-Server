@@ -1,0 +1,22 @@
+plugins {
+    id 'application' 
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+    id 'java'
+}
+repositories {
+    mavenCentral()
+}
+sourceSets {
+    main {
+        java {
+            srcDir 'src'
+        }
+    }
+}
+dependencies {
+    implementation 'com.fazecast:jSerialComm:[2.0.0,3.0.0)'
+}
+
+application {
+    mainClass = 'com.jcrm1.threedsinputcap.Main'
+}
