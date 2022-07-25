@@ -5,7 +5,7 @@ Requires ```jcrm1/3DSUSBController-Homebrew``` and ```jcrm1/3DSUSBController-USB
 
 Running:
 1. Connect USB device  
-2. Start server  
+2. Start server (```java -jar *.jar```)  
 3. Start homebrew  
 
 Building:  
