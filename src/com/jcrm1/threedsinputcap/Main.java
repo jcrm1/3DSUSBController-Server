@@ -3,6 +3,7 @@ package com.jcrm1.threedsinputcap;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -20,6 +21,22 @@ public class Main {
 	private static int touchY = 0;
 	public static boolean running = true;
 	public static void main(String[] args) throws Exception {
+		if (args.length != 2) {
+			System.err.println("Usage: <address> <port>");
+			System.exit(1);
+		}
+		try {
+			InetAddress.getByName(args[0]);
+		} catch (UnknownHostException e) {
+			System.err.println("Invalid address");
+			System.exit(3);
+		}
+		try {
+			Integer.parseInt(args[1]);
+		} catch (NumberFormatException e) {
+			System.err.println("Invalid port");
+			System.exit(2);
+		}
 		OS os = null;
 		String osStr = System.getProperty("os.name").toLowerCase();
 		if (osStr.contains("window")) os = OS.WINDOWS;
@@ -41,7 +58,7 @@ public class Main {
 		}
 		port.openPort();
 		port.setBaudRate(115200);
-		HttpServer server = HttpServer.create(new InetSocketAddress(InetAddress.getByName("192.168.1.46"), 8080), 0);
+		HttpServer server = HttpServer.create(new InetSocketAddress(InetAddress.getByName(args[0]), Integer.parseInt(args[1])), 0);
         server.createContext("/c", new CHandler());
         server.setExecutor(null); // creates a default executor
         server.start();
