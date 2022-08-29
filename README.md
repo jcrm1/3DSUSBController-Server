@@ -1,4 +1,5 @@
-# 3DSUSBController-Server
+# 3DSUSBController-Server 
+<!---this commit is just to create a marker showing the release of 1.2--->
 3DS Homebrew to turn your 3DS into a USB game controller (Java server code)  
 
 Requires [3DSUSBController-Homebrew](https://github.com/jcrm1/3DSUSBController-Homebrew) and [3DSUSBController-USB-Device](https://github.com/jcrm1/3DSUSBController-USB-Device)  
