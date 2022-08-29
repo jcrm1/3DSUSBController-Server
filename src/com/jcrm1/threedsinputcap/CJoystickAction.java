@@ -1,6 +1,6 @@
 package com.jcrm1.threedsinputcap;
 
-public enum CAction {
+public enum CJoystickAction {
 	UP,
 	DOWN;
 }

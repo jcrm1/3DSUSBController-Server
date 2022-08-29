@@ -1,5 +1,6 @@
 package com.jcrm1.threedsinputcap;
 
+import java.awt.Robot;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -13,6 +14,7 @@ import com.sun.net.httpserver.HttpServer;
 
 public class Main {
 	private static SerialPort port = null;
+	private static Robot robot = null;
 	private static ExecutorService pool = Executors.newFixedThreadPool(1);
 	private static HashSet<Key> activeKeys = new HashSet<Key>();
 	private static int joyX = 0;
@@ -21,8 +23,8 @@ public class Main {
 	private static int touchY = 0;
 	public static boolean running = true;
 	public static void main(String[] args) throws Exception {
-		if (args.length != 2) {
-			System.err.println("Usage: <address> <port>");
+		if (args.length != 3) {
+			System.err.println("Usage: <address> <port> <mode>");
 			System.exit(1);
 		}
 		try {
@@ -37,42 +39,65 @@ public class Main {
 			System.err.println("Invalid port");
 			System.exit(2);
 		}
-		OS os = null;
-		String osStr = System.getProperty("os.name").toLowerCase();
-		if (osStr.contains("window")) os = OS.WINDOWS;
-		else if (osStr.contains("mac")) os = OS.MACOS;
-		else if (osStr.contains("linux")) os = OS.LINUX;
-		System.out.println("Running on " + os.toString().toLowerCase());
-		for (SerialPort pt : SerialPort.getCommPorts()) {
-			if (os == OS.MACOS) {
-				if (pt.getSystemPortName().contains("usbmodem")) port = pt;
-			} else if (os == OS.WINDOWS) {
-				if (!pt.getSystemPortName().equals("COM1") && pt.getSystemPortName().contains("COM")) port = pt;
-			} else if (os == OS.LINUX) {
-				if (pt.getSystemPortName().contains("ttyS")) port = pt;
-			}
+		Mode mode = null;
+		for (Mode modeCase : Mode.values()) {
+			if (args[2].equals(modeCase.optionText)) mode = modeCase;
 		}
-		if (port == null) {
-			System.out.println("No port!");
-			throw new Exception("No applicable serial port found (Device not connected/OS or port type unsupported");
+		if (mode == null) {
+			String modesString = "";
+			for (Mode modeCase : Mode.values()) modesString += modeCase.optionText + " ";
+			System.err.println("Invalid mode (Valid modes: " + modesString.trim() + ")");
+			System.exit(4);
 		}
-		port.openPort();
-		port.setBaudRate(115200);
 		HttpServer server = HttpServer.create(new InetSocketAddress(InetAddress.getByName(args[0]), Integer.parseInt(args[1])), 0);
-        server.createContext("/c", new CHandler());
-        server.setExecutor(null); // creates a default executor
+        server.createContext("/c", new CHandlerJoystick());
+        server.setExecutor(null);
         server.start();
-        System.out.println("Started");
-        submitTask(new TaskSendSerial());
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-
-			@Override
-			public void run() {
-				running = false;
-				port.closePort();
+		if (mode == Mode.JOYSTICK_MODE) {
+			OS os = null;
+			String osStr = System.getProperty("os.name").toLowerCase();
+			if (osStr.contains("window")) os = OS.WINDOWS;
+			else if (osStr.contains("mac")) os = OS.MACOS;
+			else if (osStr.contains("linux")) os = OS.LINUX;
+			System.out.println("Running on " + os.toString().toLowerCase());
+			for (SerialPort pt : SerialPort.getCommPorts()) {
+				if (os == OS.MACOS) {
+					if (pt.getSystemPortName().contains("usbmodem")) port = pt;
+				} else if (os == OS.WINDOWS) {
+					if (!pt.getSystemPortName().equals("COM1") && pt.getSystemPortName().contains("COM")) port = pt;
+				} else if (os == OS.LINUX) {
+					if (pt.getSystemPortName().contains("ttyS")) port = pt;
+				}
 			}
-        	
-        });
+			if (port == null) {
+				System.out.println("No port!");
+				throw new Exception("No applicable serial port found (Device not connected/OS or port type unsupported");
+			}
+			port.openPort();
+			port.setBaudRate(115200);
+	        submitTask(new TaskSendSerial());
+	        Runtime.getRuntime().addShutdownHook(new Thread() {
+
+				@Override
+				public void run() {
+					running = false;
+					port.closePort();
+				}
+	        	
+	        });
+		} else if (mode == Mode.MOUSE_MODE) {
+			robot = new Robot();
+	        submitTask(new TaskSendRobotEvents(robot));
+			Runtime.getRuntime().addShutdownHook(new Thread() {
+				
+				@Override
+				public void run() {
+					running = false;
+				}
+				
+			});
+		}
+        System.out.println("Started");
     }
 	public static OutputStream getSerialOutputStream() {
 		return port.getOutputStream();

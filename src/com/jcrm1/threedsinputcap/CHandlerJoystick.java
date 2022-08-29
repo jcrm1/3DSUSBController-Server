@@ -6,7 +6,7 @@ import java.io.OutputStream;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-public class CHandler implements HttpHandler {
+public class CHandlerJoystick implements HttpHandler {
 
 	@Override
 	public void handle(HttpExchange exchange) throws IOException {
